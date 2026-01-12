@@ -92,11 +92,4 @@ class CalCulateTotalArrivalTime:
         total_time /= 100.0
         print("Total objective:", float(total_time))
 
-        """
-        print("\n=== FINAL TIMINGS ===")
-        for k in t_arrival:
-            print(f"Truck node {k}: arrival={t_arrival[k]:.1f}, depart={t_departure[k]:.1f}")
-        print("=====================\n")
-        #"""
-
         return total_time, t_arrival, t_departure
