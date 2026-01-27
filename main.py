@@ -9,7 +9,7 @@ n_drones = 2 #fixed
 drone_capacity = 1 #fixed
 depot_index=0 #fixed
 
-example_solution_str = ("0,0 |-1|-1|-1")  
+example_solution_str = ("0,0,|-1|-1|-1")  
 # ---------------------------------------------------------------------------
 def parse_solution(values: str):
     """
@@ -132,17 +132,24 @@ class SolutionRunner(CalCulateTotalArrivalTime, SolutionFeasibility):
         print("Complete         :", complete_ok)
         print("Parts consistent :", parts_ok)
         print("Drone trips OK   :", drones_ok)
-        print("GLOBAL FEASIBLE  :", global_ok)
 
         if not global_ok:
             #print("\nCannot calculate the total cost, since the solution is not feasible.")
+            print("GLOBAL FEASIBLE  :", global_ok)
             return {'error': '', 'feasible': False, 'objective': 0.0} 
 
         # If we get here, the solution is feasible → compute total waiting time
-        total, arr, dep = self.calculate_total_waiting_time(
+        total, arr, dep, feas = self.calculate_total_waiting_time(
             solution=sol
         )
+        
+        if not feas:
+           print("GLOBAL FEASIBLE  :", feas) 
+           #print("Flight range limits on one of the drones is not satisfied") 
+           return {'error': '', 'feasible': False, 'objective': 0.0}  
 
+        print("GLOBAL FEASIBLE  :", feas) 
+        print("Total objective:", float(total))
         return {'error': '', 'feasible': True, 'objective': total}#total, arr, dep
 
 
@@ -161,5 +168,3 @@ runner = SolutionRunner(
 )
 
 result = runner.run()  # prints feasibility and total arrival time if feasible
-
-
