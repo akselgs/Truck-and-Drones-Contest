@@ -152,12 +152,19 @@ class SolutionFeasibility:
         if len(part3_clean) != len(part4_clean):
             return False
 
-        for lc, rc in zip(part3_clean, part4_clean):
+        for lc, cust, rc in zip(part3, part2, part4):
             try:
                 launch_cell = int(lc)
                 reconvene_cell = int(rc)
             except (TypeError, ValueError):
                 return False
+            
+            if cust == -1 and lc == -1 and rc == -1: 
+               continue          
+
+            if lc == -1 or rc == -1 or cust == -1:
+               #print(lc,cust,rc)
+               return False 
 
             if not self.is_valid_cell(launch_cell, part1):
                 return False
@@ -278,8 +285,8 @@ class SolutionFeasibility:
         if not self.is_valid_cell(launch_cell, part1) or not self.is_valid_cell(reconvene_cell, part1):
             return False
 
-        # Must launch at or before reconvene
-        if launch_cell > reconvene_cell:
+        # Must launch before reconvene
+        if launch_cell >= reconvene_cell:
             return False
 
         launch_customer = self.get_customer_from_cell(launch_cell, part1)
