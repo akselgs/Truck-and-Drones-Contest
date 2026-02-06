@@ -9,7 +9,8 @@ n_drones = 2 #fixed
 drone_capacity = 1 #fixed
 depot_index=0 #fixed
 
-example_solution_str = ("0,0,|-1|-1|-1")  
+example_solution_str = ("0,0,|-1|-1|-1")
+example_solution_str = ("0,14,71,40,4,98,24,47,92,15,75,21,20,9,39,95,100,99,32,18,78,93,58,22,60,85,2,73,50,97,55,88,66,90,84,74,11,52,68,48,35,51,81,1,36,3,54,25,67,89,77,29,91,62,38,26,76,80,34,33,27,17,65,5,63,56,41,86,37,28,96,45,12,10,19,44,83,8,69,53,94,46,79,42,70,72,16,87,57,59,49,61,7,64,13,30,6,82,31,23,43,0,|-1|-1|-1")
 # ---------------------------------------------------------------------------
 def parse_solution(values: str):
     """
@@ -128,10 +129,10 @@ class SolutionRunner(CalCulateTotalArrivalTime, SolutionFeasibility):
         drones_ok = f.are_all_drone_trips_feasible(sol)
         global_ok = f.is_solution_feasible(sol)
 
-        print("Truck feasible   :", truck_ok)
-        print("Complete         :", complete_ok)
-        print("Parts consistent :", parts_ok)
-        print("Drone trips OK   :", drones_ok)
+        #print("Truck feasible   :", truck_ok)
+        #print("Complete         :", complete_ok)
+        #print("Parts consistent :", parts_ok)
+        #print("Drone trips OK   :", drones_ok)
 
         if not global_ok:
             #print("\nCannot calculate the total cost, since the solution is not feasible.")
@@ -167,4 +168,4 @@ runner = SolutionRunner(
     n_drones=n_drones,
 )
 
-result = runner.run()  # prints feasibility and total arrival time if feasible
+#result = runner.run()  # prints feasibility and total arrival time if feasible
