@@ -4,13 +4,17 @@ import numpy as np
 
 
 # -------------------------------------------
-filename = "Truck_Drone_Contest.txt"
+#filename = "Truck_Drone_Contest.txt"
+filename = "Truck_Drone_Contest_new.txt"
 n_drones = 2 #fixed
 drone_capacity = 1 #fixed
 depot_index=0 #fixed
 
 example_solution_str = ("0,0,|-1|-1|-1")
 example_solution_str = ("0,14,71,40,4,98,24,47,92,15,75,21,20,9,39,95,100,99,32,18,78,93,58,22,60,85,2,73,50,97,55,88,66,90,84,74,11,52,68,48,35,51,81,1,36,3,54,25,67,89,77,29,91,62,38,26,76,80,34,33,27,17,65,5,63,56,41,86,37,28,96,45,12,10,19,44,83,8,69,53,94,46,79,42,70,72,16,87,57,59,49,61,7,64,13,30,6,82,31,23,43,0,|-1|-1|-1")
+example_solution_str = ("0,54,25,58,71,40,74,24,65,17,79,30,61,52,42,87,7,13,85,77,20,29,19,2,93,3,66,27,81,53,34,55,63,99,90,45,84,21,62,5,10,36,8,22,64,68,92,16,96,48,35,9,72,83,67,46,88,6,15,32,11,33,69,80,41,82,31,14,95,12,1,86,44,47,97,91,50,4,49,57,51,0,|98,43,23,38,100,60,78,39,18,89,75,70,59,94,56,28,26,73,-1,76,37,|1,5,13,15,20,25,32,34,38,42,44,47,53,59,64,70,72,76,-1,39,62,|5,13,15,20,25,32,34,38,42,44,47,53,58,64,70,72,76,81,-1,40,63,")
+
+
 # ---------------------------------------------------------------------------
 def parse_solution(values: str):
     """
@@ -129,13 +133,13 @@ class SolutionRunner(CalCulateTotalArrivalTime, SolutionFeasibility):
         drones_ok = f.are_all_drone_trips_feasible(sol)
         global_ok = f.is_solution_feasible(sol)
 
-        #print("Truck feasible   :", truck_ok)
-        #print("Complete         :", complete_ok)
-        #print("Parts consistent :", parts_ok)
-        #print("Drone trips OK   :", drones_ok)
+        print("Truck feasible   :", truck_ok)
+        print("Complete         :", complete_ok)
+        print("Parts consistent :", parts_ok)
+        print("Drone trips OK   :", drones_ok)
 
         if not global_ok:
-            #print("\nCannot calculate the total cost, since the solution is not feasible.")
+            print("\nCannot calculate the total cost, since the solution is not feasible.")
             print("GLOBAL FEASIBLE  :", global_ok)
             return {'error': '', 'feasible': False, 'objective': 0.0} 
 
@@ -146,7 +150,7 @@ class SolutionRunner(CalCulateTotalArrivalTime, SolutionFeasibility):
         
         if not feas:
            print("GLOBAL FEASIBLE  :", feas) 
-           #print("Flight range limits on one of the drones is not satisfied") 
+           print("Flight range limits on one of the drones is not satisfied") 
            return {'error': '', 'feasible': False, 'objective': 0.0}  
 
         print("GLOBAL FEASIBLE  :", feas) 
@@ -168,4 +172,6 @@ runner = SolutionRunner(
     n_drones=n_drones,
 )
 
-#result = runner.run()  # prints feasibility and total arrival time if feasible
+result = runner.run()  # prints feasibility and total arrival time if feasible
+print(result["feasible"])
+print(result["objective"])
