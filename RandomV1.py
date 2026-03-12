@@ -93,4 +93,6 @@ runner = SolutionRunner(
     n_drones=n_drones,
 )
 
-runner.run()
+result = runner.run()
+
+print(result["objective"])
