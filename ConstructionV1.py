@@ -6,8 +6,10 @@ import bisect
 
 #filename = "Truck_Drone_Contest.txt"
 filename = "Truck_Drone_Contest_new.txt"
+filename = "Data/F_10.txt"
 n_nodes, n_customers, n_drones, flight_range, truck_times, drone_times, flight_range, drone_capacity = read_data(filename)
 depot_index = 0
+
 def initialize(n_nodes):
     #Generate list of nodes we can iterate through and potentially "exhaust"
 
@@ -15,7 +17,6 @@ def initialize(n_nodes):
 
     nodes_list.pop(0)#Generate list of customers we have served.
     
-
     return nodes_list
 
 class Solution():
@@ -113,7 +114,7 @@ nodes_list = initialize(n_nodes)
 
 
 #Main loop for truck only:
-max_iterations = 100
+max_iterations = n_nodes-1
 iterations = 0
 truck_times_copy = truck_times.copy()
 truck_times_copy[: , 0]= -1
@@ -310,7 +311,7 @@ final_result = final_runner.run()
 print("Final result: Objective- ", final_result["objective"], "| Feasibility- ", final_result["feasible"])
 
 
-    
+print(n_nodes)
 
 
 
