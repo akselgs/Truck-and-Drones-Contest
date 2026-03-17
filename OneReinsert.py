@@ -115,9 +115,11 @@ def one_reinsert(runner):
             part3[drone_index].insert(insertion_index, selected_sender)
             part4[drone_index].insert(insertion_index, selected_receiver)
 
-            runner.solution["part2"] = part2[drone_index] + [-1] + part2[drone_index]
-            runner.solution["part3"] = part3[drone_index] + [-1] + part3[drone_index]
-            runner.solution["part4"] = part4[drone_index] + [-1] + part4[drone_index]
+
+            #We update the list.
+            runner.solution["part2"] = part2[0] + [-1] + part2[1]
+            runner.solution["part3"] = part3[0] + [-1] + part3[1]
+            runner.solution["part4"] = part4[0] + [-1] + part4[1]
 
             if insert_option == 2:
                 #part3_1.append(len(runner.solution["part1"]))
