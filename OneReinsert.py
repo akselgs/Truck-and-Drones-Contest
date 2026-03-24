@@ -30,13 +30,25 @@ def destroy_random_delete(runner):
     n_nodes = len(runner.solution["part1"]) + len(runner.solution["part2"]) - 3
     deletion = random.randint(1,n_nodes)
 
-    deletion = 10
-    print(deletion)
+    deletion = 3
+    print("Delete node:", deletion)
 
     if deletion in runner.solution["part1"]:
     
         index = runner.solution["part1"].index(deletion)
         runner.solution["part1"].remove(deletion)
+        while index in runner.solution["part3"]:
+            index_indexing = runner.solution["part3"].index(index)
+            runner.solution["part3"].remove(index)
+            runner.solution["part2"].pop(index_indexing)
+            runner.solution["part4"].pop(index_indexing)
+        
+        while index in runner.solution["part4"]:
+            index_indexing = runner.solution["part4"].index(index)
+            runner.solution["part4"].remove(index)
+            runner.solution["part2"].pop(index_indexing)
+            runner.solution["part3"].pop(index_indexing)
+            
         runner.solution["part3"] = [x-1 if x >= index else x for x in runner.solution["part3"]]
         runner.solution["part4"] = [x-1 if x > index else x for x in runner.solution["part4"]]
     elif deletion in runner.solution["part2"]:
@@ -50,179 +62,31 @@ def destroy_random_delete(runner):
     return runner
 
 
-def fix_random_insert(runner, nr_insertions):
+def fix_random_insert(runner):
+    ok = True
+
+    print("Does this happen??")
+    try:
+        runner.run()
+        total_nodes = runner.feasibility
+        print()
+        print("Complete solution? ---", total_nodes.is_complete_solution(runner.solution))
+        ok = False
+    except:
+        ok = False
+        print("not OK")
+        
+    while not ok:
+        ok = True
+        print("Exited by cheating")
     return runner
 
 
 #Random removal- random insert
 def one_reinsert(runner):
-    n_nodes = len(runner.solution["part1"]) + len(runner.solution["part2"]) - 3
-    print("ONE RE-INSERT")
-    print(runner.solution)
-
-    remove_node = random.randint(1,n_nodes)
-    remove_node = 10
-
-    if (remove_node in runner.solution["part1"]): #Remove node was originally truck-node:
-        remove_node_index = runner.solution["part1"].index(remove_node)
-        runner.solution["part1"].remove(remove_node)
-        print()
-        print("node", remove_node, "was moved from truck at index", remove_node_index)
-        print(runner.solution)
-
-        #If this node is a sender or reciever, we reinser into truck path.
-        if ((remove_node_index in runner.solution["part3"]) or (remove_node_index in runner.solution["part4"])):
-            print("this is a sender or receiver, so must be reinserted to truck, so we don't have to deal with extra node")
-            insert_option = 0
-        
-        else:
-            insert_option = random.randint(0,2)
-            insert_option = 1
-
-
-        if insert_option == 0:
-            insert_position = random.randint(1, len(runner.solution["part1"])-1)
-            runner.solution["part1"].insert(insert_position, remove_node)
-            print()
-            print("inserted into truck_route, at index", insert_position)
-            print(runner.solution)
-
-        
-        else:
-            splitpoint = runner.solution["part4"].index(-1)
-
-            part2 = [runner.solution["part2"][:splitpoint],runner.solution["part2"][splitpoint+1:]]
-
-            part3 = [runner.solution["part3"][:splitpoint],runner.solution["part3"][splitpoint+1:]]
-
-            part4 = [runner.solution["part4"][:splitpoint],runner.solution["part4"][splitpoint+1:]]
-
-            part3[0] = [x-1 if x > remove_node_index else x for x in part3[0]]
-            part3[1] = [x-1 if x > remove_node_index else x for x in part3[1]]
-            part4[0] = [x-1 if x > remove_node_index else x for x in part4[0]]
-            part4[1] = [x-1 if x > remove_node_index else x for x in part4[1]]
-
-            runner.solution["part3"] = part3[0] + [-1] + part3[1]
-            runner.solution["part4"] = part4[0] + [-1] + part4[1]
-            print()
-            print("to be inserted into drone", insert_option)
-            print("shifted indexes larger than the remove node's index: ", remove_node_index)
-            print(runner.solution)
-
-            drone_index = insert_option-1
-
-            #Temprorarily add 0 and x to send and receive for comparing lists.
-            part3[drone_index].append(len(runner.solution["part1"]))
-            part4[drone_index].insert(0,0)
-
-            #Find sender candidates between the sender and receiver positions
-            sending_candidates = []
-            for i in range(0, len(part3[drone_index])):
-                if part4[drone_index][i]-part3[drone_index][i] <= -1:
-                    sending_candidates.extend(list(range(part4[drone_index][i],part3[drone_index][i])))
-
-            selected_sender = random.sample(sending_candidates,1)[0]
-
-            #Find receiver candidates (between selected sender and the "next possible sender")")
-            insertion_index = -1 #Only an initial value, NOT the same as the -1 used as separator
-            for i in range(0, len(part3[drone_index])):
-                if selected_sender < part3[drone_index][i]:
-                    receiver_candidates = list(range(selected_sender+1,part3[drone_index][i]+1))
-                    insertion_index = i
-                    print("inserted at index", insertion_index)
-                    break
-
-            selected_receiver = random.sample(receiver_candidates,1)[0]
-
-
-            #Now we can remove the temp additions
-            part3[drone_index].pop()
-            part4[drone_index].remove(0)
-
-            #And we insert the node we removed into the node's list with the corresponding indexes
-            part2[drone_index].insert(insertion_index, remove_node)
-            part3[drone_index].insert(insertion_index, selected_sender)
-            part4[drone_index].insert(insertion_index, selected_receiver)
-
-
-            #We update the list.
-            runner.solution["part2"] = part2[0] + [-1] + part2[1]
-            runner.solution["part3"] = part3[0] + [-1] + part3[1]
-            runner.solution["part4"] = part4[0] + [-1] + part4[1]
-
-    elif (remove_node in runner.solution["part2"]): #Remove node was origianlly drone-node.
-        print()
-        splitpoint = runner.solution["part4"].index(-1)
-
-        part2 = [runner.solution["part2"][:splitpoint],runner.solution["part2"][splitpoint+1:]]
-        part3 = [runner.solution["part3"][:splitpoint],runner.solution["part3"][splitpoint+1:]]
-        part4 = [runner.solution["part4"][:splitpoint],runner.solution["part4"][splitpoint+1:]]
-
-        if remove_node in part2[0]:
-            print("Node removed from drone 1")
-            remove_node_index = part2[0].index(remove_node)
-            print(part3[0])
-            print(remove_node_index)
-            part2[0].pop(remove_node_index)
-            part3[0].pop(remove_node_index)
-            part4[0].pop(remove_node_index)
-            
-            runner.solution["part2"] = part2[0] + [-1] + part2[1]
-            runner.solution["part3"] = part3[0] + [-1] + part3[1]
-            runner.solution["part4"] = part4[0] + [-1] + part4[1]
-
-            print(runner.solution)
-
-        elif remove_node in part2[1]:
-            print("Node removed from drone 1")
-            remove_node_index = part2[1].index(remove_node)
-            part2[1].pop(remove_node_index)
-            part3[1].pop(remove_node_index)
-            part4[1].pop(remove_node_index)
-            
-            runner.solution["part2"] = part2[0] + [-1] + part2[1]
-            runner.solution["part3"] = part3[0] + [-1] + part3[1]
-            runner.solution["part4"] = part4[0] + [-1] + part4[1]
-
-            print(runner.solution)
-
-        else:
-            print("Error: Node not found in part 2")
-
-        insert_option = random.randint(0,2)
-        insert_option = 0
-
-        if insert_option == 0:
-            insert_location = random.randint(1,len(runner.solution["part1"])-2)
-            insert_location = 3
-            runner.solution["part1"].insert( insert_location, remove_node)
-
-            part3[0] = [x+1 if x > insert_location else x for x in part3[0]]
-            part3[1] = [x+1 if x > insert_location else x for x in part3[1]]
-            part4[0] = [x+1 if x > insert_location else x for x in part4[0]]
-            part4[1] = [x+1 if x > insert_location else x for x in part4[1]]
-
-            print(part3)
-            runner.solution["part2"] = part2[0] + [-1] + part2[1]
-            runner.solution["part3"] = part3[0] + [-1] + part3[1]
-            runner.solution["part4"] = part4[0] + [-1] + part4[1]
-            runner.solution["part2"] = part2[0] + [-1] + part2[1]
-            runner.solution["part3"] = part3[0] + [-1] + part3[1]
-            runner.solution["part4"] = part4[0] + [-1] + part4[1]
-            print()
-            print("Node inserted at truck route, index", insert_location)
-            print("Drone indexes shifted")
-            print(runner.solution)
-
-        
-
-    else:
-        print("remove node not found in truck route or drone route. ERROR...")
-        
-
-
-    new_runner = runner
-    return new_runner
+    runner = destroy_random_delete(runner)
+    runner = fix_random_insert(runner)
+    return runner
 
 example_filename = "Data/F_10.txt"
 n_nodes, n_customers, n_drones, flight_range, truck_times, drone_times, flight_range, drone_capacity = read_data(example_filename)
@@ -240,9 +104,9 @@ example_runner = SolutionRunner(
 print("Example runner:")
 print(example_runner.solution)
 print(example_runner.run())
-#example_runner = create_initial_runner(example_filename)
-#new_runner = one_reinsert(example_runner)
+
 new_runner = destroy_random_delete(example_runner)
 print("New runner:")
 print(new_runner.solution)
-print(new_runner.run())
+new_runner_fixed = fix_random_insert(new_runner)
+print(new_runner_fixed.run())
