@@ -165,6 +165,19 @@ class SolutionRunner(CalCulateTotalArrivalTime, SolutionFeasibility):
         print("Total objective:", float(total))
         return {'error': '', 'feasible': True, 'objective': total}#total, arr, dep
 
+    def copy(self):
+        return(
+            SolutionRunner(
+                solution = self.solution,
+                truck_times = self.truck_times,
+                flight_time_matrix = self.flight_time_matrix,
+                flight_range_limit = self.flight_range,
+                depot_index= self.depot_index,
+                max_iterations=self.max_iterations,
+                convergence_threshold=self.convergence_threshold,
+                n_drones=self.n_drones,
+            )
+        )
 
 # get solution from input arguments
 solution = parse_solution(example_solution_str)
