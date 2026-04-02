@@ -1,6 +1,6 @@
-from Solution import Solution
-from main import read_data, SolutionRunner, parse_solution
 
+from SolutionRunner import SolutionRunner
+from Common import read_data
 
 
 def create_initial_runner(filename):
@@ -12,19 +12,20 @@ def create_initial_runner(filename):
     nodes_list = list(range(0,n_nodes))
     nodes_list.append(0)
     
-    initial_solution = Solution(nodes_list,[],[],[],[],[],[])
+    initial_solution = {
+        "part1" : nodes_list,
+        "part2" : [-1],
+        "part3" : [-1],
+        "part4" : [-1]
+    }
 
     return SolutionRunner(
-        parse_solution(initial_solution.to_solution_string()),
+        solution=initial_solution,
         truck_times=truck_times,
-        flight_time_matrix=drone_times,
+        drone_times=drone_times,
         flight_range_limit=flight_range,
         depot_index=depot_index,
         max_iterations=10,
         convergence_threshold=1.0,
         n_drones=n_drones,
     )
-
-example_filename = "Truck_Drone_Contest_new.txt"
-initial_runner = create_initial_runner(example_filename)
-print(initial_runner.run())

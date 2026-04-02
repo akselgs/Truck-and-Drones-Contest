@@ -40,6 +40,10 @@ class CalCulateTotalArrivalTime:
             for c in drone_customers:
                 launch_idx = part3_clean[start_idx] - 1  # 1-based → 0-based
                 return_idx = part4_clean[start_idx] - 1
+                # ############################################################### TODO! #Replaced this because I assume null-indexing from the get-go
+                # launch_idx = part3_clean[start_idx]
+                # return_idx = part4_clean[start_idx]
+                # ############################################################### TODO! #WILL CAUSE ERRORS IF SOLUTIONS ARE SUPPOSED TO BE 1-INDEXED!
                 flights.append((c, launch_idx, return_idx))
                 start_idx += 1
             drone_flights.append(flights)
@@ -81,6 +85,7 @@ class CalCulateTotalArrivalTime:
                         
                         # Drone cannot depart before both truck and its own availability
                         possible_launch_time = t_arrival[launch_node]
+                        if launch_node == 0: possible_launch_time = 0; 
                         actual_launch_time = max(possible_launch_time, drone_availability[u])
                                                      
                         drone_arrival_customer = actual_launch_time + flight_out

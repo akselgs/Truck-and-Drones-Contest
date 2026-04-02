@@ -1,198 +1,77 @@
 from FeasibiltyCheck import SolutionFeasibility
 from CalCulateTotalArrivalTime import CalCulateTotalArrivalTime
 import numpy as np
-
-
-# -------------------------------------------
-#filename = "Truck_Drone_Contest.txt"
-filename = "Truck_Drone_Contest_new.txt"
-n_drones = 2 #fixed
-drone_capacity = 1 #fixed
-depot_index=0 #fixed
-
-#ONLY WHEN WE NEED TO GET A RESULT! SHOULD OTHERWISE BE FALSE
-overwrite_feasibilty = False
-DEBUG = False
-
-if not DEBUG:
-    def print(*args, **kwargs):
-        pass
-
-example_solution_str = ("0,0,|-1|-1|-1")
-example_solution_str = ("0,14,71,40,4,98,24,47,92,15,75,21,20,9,39,95,100,99,32,18,78,93,58,22,60,85,2,73,50,97,55,88,66,90,84,74,11,52,68,48,35,51,81,1,36,3,54,25,67,89,77,29,91,62,38,26,76,80,34,33,27,17,65,5,63,56,41,86,37,28,96,45,12,10,19,44,83,8,69,53,94,46,79,42,70,72,16,87,57,59,49,61,7,64,13,30,6,82,31,23,43,0,|-1|-1|-1")
-example_solution_str = ("0,54,25,58,71,40,74,24,65,17,79,30,61,52,42,87,7,13,85,77,20,29,19,2,93,3,66,27,81,53,34,55,63,99,90,45,84,21,62,5,10,36,8,22,64,68,92,16,96,48,35,9,72,83,67,46,88,6,15,32,11,33,69,80,41,82,31,14,95,12,1,86,44,47,97,91,50,4,49,57,51,0,|98,43,23,38,100,60,78,39,18,89,75,70,59,94,56,28,26,73,-1,76,37,|1,5,13,15,20,25,32,34,38,42,44,47,53,59,64,70,72,76,-1,39,62,|5,13,15,20,25,32,34,38,42,44,47,53,58,64,70,72,76,81,-1,40,63,")
+from OneReinsert import one_reinsert
+from SolutionRunner import SolutionRunner
+from Common import parse_solution, read_data
+from InitialSolution import create_initial_runner
+from LocalSearch import local_search
+from SimAnn import sim_ann
+import time
 
 
 # ---------------------------------------------------------------------------
-def parse_solution(values: str):
-    """
-    values: string like "1,2,3,|,10,20,|,5,6,|,100,200"
-            or "1,2,3|10,20|5,6|100,200"
-    returns: {"part1": [...], "part2": [...], "part3": [...], "part4": [...]}
-    """
 
-    if not isinstance(values, str):
-        raise TypeError(f"Expected string from Go, got {type(values)}")
+# LEFTOVERS:
+# Construction example string for use with Truck_Drone_Contest_new:
+# ("0,54,25,58,71,40,74,24,65,17,79,30,61,52,42,87,7,13,85,77,20,29,19,2,93,3,66,27,81,53,34,55,63,99,90,45,84,21,62,5,10,36,8,22,64,68,92,16,96,48,35,9,72,83,67,46,88,6,15,32,11,33,69,80,41,82,31,14,95,12,1,86,44,47,97,91,50,4,49,57,51,0,|98,43,23,38,100,60,78,39,18,89,75,70,59,94,56,28,26,73,-1,76,37,|1,5,13,15,20,25,32,34,38,42,44,47,53,59,64,70,72,76,-1,39,62,|5,13,15,20,25,32,34,38,42,44,47,53,58,64,70,72,76,81,-1,40,63,")
 
-    s = values.strip()
 
-    # normalize around pipes: ",|," or ",|" or "|," -> "|"
-    s = s.replace(",|,", "|").replace(",|", "|").replace("|,", "|")
+### ---START--- ###
+# --
+# --
+# --Fixed Parameters--
+n_drones = 2 #fixed
+drone_capacity = 1 #fixed
+depot_index=0 #fixed
+# --------------------
 
-    parts = s.split("|")
-    if len(parts) != 4:
-        raise ValueError(f"Expected 4 parts separated by '|', got {len(parts)} parts: {parts}")
+# --File selection--
+# --
+filename = "Data/F_20.txt"
 
-    def parse_int_list(part: str):
-        # split by comma, ignore empty chunks (can happen after normalization)
-        chunks = [c.strip() for c in part.split(",") if c.strip() != ""]
-        return [int(c) for c in chunks]
+# ----------------------
 
-    return {
-        "part1": parse_int_list(parts[0]),
-        "part2": parse_int_list(parts[1]),
-        "part3": parse_int_list(parts[2]),
-        "part4": parse_int_list(parts[3]),
-    }
+# --Initialization--
+# --
+initial_runner = create_initial_runner(filename)
 
 
 
-def read_data(filename: str):
+initial_result = initial_runner.run()
+print("Initial runner solution")
+print(initial_runner.solution)
+print("Initial runner objective:")
+print(initial_result["objective"])
+print("Feasibility:")
+print(initial_result["feasible"])
+# ----------------------
 
-    truck_times = []
-    drone_times = []
-    hash_count=0
-    with open(filename, "r") as f:
-        for line in f:
-            line = line.strip()
-            if line[0]!="#":
-               row = list(map(float, line.strip().split()))
-               if hash_count == 1:
-                  n_customers = int(row[0])
-               if hash_count == 2:
-                  flight_range = int(row[0])
-               elif hash_count == 3:
-                  truck_times.append(row)
-               elif hash_count == 4:
-                  drone_times.append(row) 
-            else:
-               hash_count+=1
-            
-    n_nodes = n_customers+1 
-    truck_times=np.array(truck_times)
-    drone_times=np.array(drone_times)
+# --Transformation--
+# --
 
-    return n_nodes, n_customers, n_drones, flight_range, truck_times, drone_times, flight_range,  drone_capacity
+start = time.time()
+new_runner = local_search(initial_runner, 10000)
+#new_runner = sim_ann(initial_runner, 10000)
+
+end = time.time()
+print("Time taken:")
+print()
+print(end - start)
+print()
+initial_result = initial_runner.run()
+print("initial solution:")
+print(initial_runner.solution)
+print("initial_result:", initial_result["objective"])
+print("feas", initial_result["feasible"])
+
+new_result = new_runner.run()
+print("new solution:")
+print(new_runner.solution)
+print("new_result:")
+print()
+print(new_result["objective"])
+print()
+print("feas", new_result["feasible"])
 
 
-n_nodes, n_customers, n_drones, flight_range, truck_times, drone_times, flight_range, drone_capacity = read_data(filename)
-
-# -------------------------------------------
-
-class SolutionRunner(CalCulateTotalArrivalTime, SolutionFeasibility):
-    def __init__(
-        self,
-        solution: dict,
-        truck_times,
-        flight_time_matrix,
-        flight_range_limit: float,
-        depot_index: int = depot_index,
-        max_iterations: int = 10,
-        convergence_threshold: float = 1.0,
-        n_drones: int = n_drones,
-    ):
-        """
-        Wraps feasibility check + total cost calculation in one object.
-        """
-        self.solution = solution
-        self.truck_times = truck_times
-        self.drone_times = drone_times
-        self.flight_time_matrix = flight_time_matrix
-        self.flight_range  = flight_range 
-        self.depot_index = depot_index
-        self.max_iterations = max_iterations
-        self.convergence_threshold = convergence_threshold
-        self.n_drones = n_drones
-
-        n_nodes = truck_times.shape[0]
-
-        # Create feasibility checker based on the instance
-        self.feasibility = SolutionFeasibility(
-            n_nodes=n_nodes,
-            n_drones=n_drones,
-            depot_index=depot_index,
-            drone_times=flight_time_matrix,
-            flight_range=flight_range_limit,
-        )
-
-    def run(self):
-        """
-        1) Check feasibility
-        2) If infeasible: print message and return None
-        3) If feasible: compute total waiting/arrival time and return it
-        """
-        sol = self.solution
-        f = self.feasibility
-
-        #print("=== FEASIBILITY CHECK ===")
-        truck_ok = f.is_truck_route_feasible(sol)
-        complete_ok = f.is_complete_solution(sol)
-        parts_ok = f.are_parts_consistent(sol)
-        drones_ok = f.are_all_drone_trips_feasible(sol)
-        global_ok = f.is_solution_feasible(sol)
-
-        print("Truck feasible   :", truck_ok)
-        print("Complete         :", complete_ok)
-        print("Parts consistent :", parts_ok)
-        print("Drone trips OK   :", drones_ok)
-
-        if not global_ok and not overwrite_feasibilty:
-            print("\nCannot calculate the total cost, since the solution is not feasible.")
-            print("GLOBAL FEASIBLE  :", global_ok)
-            return {'error': '', 'feasible': False, 'objective': 0.0} 
-
-        # If we get here, the solution is feasible → compute total waiting time
-        total, arr, dep, feas = self.calculate_total_waiting_time(
-            solution=sol
-        )
-        
-        if not feas and not overwrite_feasibilty:
-           print("GLOBAL FEASIBLE  :", feas) 
-           print("Flight range limits on one of the drones is not satisfied") 
-           return {'error': '', 'feasible': False, 'objective': 0.0}  
-
-        print("GLOBAL FEASIBLE  :", feas) 
-        print("Total objective:", float(total))
-        return {'error': '', 'feasible': True, 'objective': total}#total, arr, dep
-
-    def copy(self):
-        return(
-            SolutionRunner(
-                solution = self.solution,
-                truck_times = self.truck_times,
-                flight_time_matrix = self.flight_time_matrix,
-                flight_range_limit = self.flight_range,
-                depot_index= self.depot_index,
-                max_iterations=self.max_iterations,
-                convergence_threshold=self.convergence_threshold,
-                n_drones=self.n_drones,
-            )
-        )
-
-# get solution from input arguments
-solution = parse_solution(example_solution_str)
-
-runner = SolutionRunner(
-    solution=solution,
-    truck_times=truck_times,
-    flight_time_matrix=drone_times,
-    flight_range_limit=flight_range,
-    depot_index=depot_index,
-    max_iterations=10,
-    convergence_threshold=1.0,
-    n_drones=n_drones,
-)
-
-result = runner.run()  # prints feasibility and total arrival time if feasible
-print(result["feasible"])
-print(result["objective"])

@@ -3,6 +3,8 @@ import random
 from Solution import Solution
 from itertools import pairwise
 
+
+
 def create_random_runner(filename):
     n_nodes, n_customers, n_drones, flight_range, truck_times, drone_times, flight_range, drone_capacity = read_data(filename)
     depot_index = 0
@@ -52,7 +54,7 @@ def create_random_runner(filename):
     solution = parse_solution(random_solution.to_solution_string())
 
     return SolutionRunner(
-         solution=solution,
+        solution=solution,
         truck_times=truck_times,
         flight_time_matrix=drone_times,
         flight_range_limit=flight_range,
