@@ -9,6 +9,7 @@ def local_search(initial_runner, iterations):
     if result["feasible"]:
         best_solution = initial_runner.solution
         best_objective = result["objective"]
+        early_stop_counter = 0
     else:
         print("ERROR- Initial result is not feasible")
     
@@ -17,6 +18,16 @@ def local_search(initial_runner, iterations):
         if (i % 100 == 0):
             print()
             print("Iteration", i)
+            print("Early stop counter")
+            print(early_stop_counter)
+        early_stop_counter += 1
+        if early_stop_counter > 500:
+            print("early_stop")
+            best_runner.solution = best_solution
+            return best_runner
+        
+
+                
 
         candidate_runner.solution = copy.deepcopy(best_solution)
 
@@ -29,6 +40,8 @@ def local_search(initial_runner, iterations):
             if candidate_result["feasible"] and candidate_result["objective"] < best_objective:
                 best_solution = copy.deepcopy(candidate_solution)
                 best_objective = copy.deepcopy(candidate_result["objective"])
+                early_stop_counter = 0
+
                 print()
                 print("NEW BEST:")
                 print(best_solution)

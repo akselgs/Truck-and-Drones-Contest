@@ -28,7 +28,7 @@ depot_index=0 #fixed
 
 # --File selection--
 # --
-filename = "Data/F_20.txt"
+filename = "Data/F_100.txt"
 
 # ----------------------
 
@@ -51,8 +51,8 @@ print(initial_result["feasible"])
 # --
 
 start = time.time()
-new_runner = local_search(initial_runner, 10000)
-#new_runner = sim_ann(initial_runner, 10000)
+#new_runner = local_search(initial_runner, 10000)
+new_runner = sim_ann(initial_runner, 10000)
 
 end = time.time()
 print("Time taken:")

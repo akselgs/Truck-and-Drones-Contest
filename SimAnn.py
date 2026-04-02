@@ -19,13 +19,18 @@ def sim_ann(initial_runner, iterations):
         best_objective = result["objective"]
         incumbent_solution = initial_runner.solution
         incumben_objective = result["objective"]
+        early_stop_counter = 0
     else:
         print("ERROR- Initial result is not feasible")
 
     for w in range(incumbent_split):
+        rand = random.randint(0,100)
+        rand = rand/100
+        
         if (w % 100 == 0):
             print()
             print("Iteration", w)
+            print("Random:", rand)
         candidate_runner.solution = one_reinsert(incumbent_runner)
         candidate_result = candidate_runner.run(debug=False)
         incumbent_result = incumbent_runner.run()
@@ -39,6 +44,7 @@ def sim_ann(initial_runner, iterations):
                 print()
                 print("New best solution found")
                 print(best_runner.solution)
+                
                 best_result = best_runner.run(debug = True)
 
         elif candidate_result["feasible"]:
@@ -54,9 +60,16 @@ def sim_ann(initial_runner, iterations):
     t = t_0
     
     for i in range(iterations - incumbent_split):
+        rand = random.randint(0,100)
+        rand = rand/100
+        early_stop_counter += 1
+        if early_stop_counter > 1000:
+            return best_runner
         if (i % 100 == 0):
             print()
             print("Iteration", i + incumbent_split)
+            print("Early stop counter:", early_stop_counter)
+            print("Random:", rand)
         #print("incumb")
         #print(incumbent_runner.solution)
         candidate_runner.solution = one_reinsert(incumbent_runner)
@@ -84,6 +97,7 @@ def sim_ann(initial_runner, iterations):
                 print()
                 print("New best solution found")
                 print(best_runner.solution)
+                early_stop_counter = 0
                 best_result = best_runner.run(debug = True)
         elif candidate_result["feasible"] and (rand <  p):
             if delta_e != 0:
