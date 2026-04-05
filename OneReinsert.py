@@ -29,20 +29,29 @@ from itertools import groupby
 import copy
 
 
-def destroy_random_delete(runner):
-    candidate = copy.deepcopy(runner.solution)
-    n_nodes = len(candidate["part1"]) + len(candidate["part2"]) - 3
+def destroy_random_node_delete(runner, solution):
+    #Cheaper to copy each part of the solution than a deepcopy.
+    candidate = solution.copy()
+    candidate["part1"] = solution["part1"][:]
+    candidate["part2"] = solution["part2"][:]
+    candidate["part3"] = solution["part3"][:]
+    candidate["part4"] = solution["part4"][:]
+
+
+    # -3 to exclude the zeroes in truck route and the divider in the drone route
+    n_customers = len(candidate["part1"]) + len(candidate["part2"]) - 3 
     
-    deletion = random.randint(1,n_nodes)
+    
+    deletion = random.randint(1, n_customers)
     # print("Delete node:", deletion)
     unassigned = []
     
     if deletion in candidate["part1"]:
-    
         index = candidate["part1"].index(deletion)
         candidate["part1"].remove(deletion)
         unassigned.append(deletion)
-        while index in candidate["part3"]:
+
+        if index in candidate["part3"]:
             index_indexing = candidate["part3"].index(index)
             candidate["part3"].remove(index)
             delete_drone = candidate["part2"][index_indexing]
@@ -50,7 +59,7 @@ def destroy_random_delete(runner):
             unassigned.append(delete_drone)
             candidate["part4"].pop(index_indexing)
         
-        while index in candidate["part4"]:
+        if index in candidate["part4"]:
             index_indexing = candidate["part4"].index(index)
             candidate["part4"].remove(index)
             delete_drone = candidate["part2"][index_indexing]
@@ -60,18 +69,14 @@ def destroy_random_delete(runner):
             
         candidate["part3"] = [x-1 if x >= index else x for x in candidate["part3"]]
         candidate["part4"] = [x-1 if x > index else x for x in candidate["part4"]]
-    elif deletion in runner.solution["part2"]:
+
+    else:
         index = runner.solution["part2"].index(deletion)
         candidate["part2"].remove(deletion)
         unassigned.append(deletion)
         candidate["part3"].pop(index)
         candidate["part4"].pop(index)
 
-    # print()
-    # print("Succesful deletion! Candidate solution is now:")
-    # print(candidate)
-    # print("Unassigned nodes to be inserted:")
-    # print(unassigned)
     return candidate, unassigned
 
 
@@ -330,8 +335,11 @@ def fix_consistent(runner):
     return runner
 
 
-def one_reinsert(runner):
-    candidate, unassigned = destroy_random_delete(runner)
+def one_reinsert(runner, solution=None):
+    if not solution:
+        solution = runner.solution
+    
+    candidate, unassigned = destroy_random_node_delete(runner, solution) #Good
     total, arr, dep, feas = runner.calculate_total_waiting_time(candidate)
     # print("Destroyed candidate:")
     # print(candidate)
