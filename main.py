@@ -4,7 +4,7 @@ import numpy as np
 from OneReinsert import one_reinsert
 from SolutionRunner import SolutionRunner
 from Common import parse_solution, read_data
-from InitialSolution import create_initial_runner
+from InitialSolution import create_initial_runner, create_new_runner
 from LocalSearch import local_search
 from SimAnn import sim_ann
 import time
@@ -34,13 +34,13 @@ filename = "Data/R_10.txt"
 
 # --Initialization--
 # --
-initial_runner = create_initial_runner(filename)
+runner = create_initial_runner(filename)
+
+initial_result = runner.run()
 
 
-
-initial_result = initial_runner.run()
 print("Initial runner solution")
-print(initial_runner.solution)
+print(runner.solution)
 print("Initial runner objective:")
 print(initial_result["objective"])
 print("Feasibility:")
@@ -51,21 +51,16 @@ print(initial_result["feasible"])
 # --
 
 start = time.time()
-new_runner = local_search(initial_runner, 10)
-#new_runner = sim_ann(initial_runner, 100)
+#new_solution = local_search(runner, 10000)
+new_solution = sim_ann(runner, 10000)
 
 end = time.time()
 print("Time taken:")
 print()
 print(end - start)
 print()
-initial_result = initial_runner.run()
-print("initial solution:")
-print(initial_runner.solution)
-print("initial_result:", initial_result["objective"])
-print("feas", initial_result["feasible"])
-
-new_result = new_runner.run()
+new_runner = create_new_runner(filename, new_solution)
+new_result = new_runner.run(debug=True)
 print("new solution:")
 print(new_runner.solution)
 print("new_result:")

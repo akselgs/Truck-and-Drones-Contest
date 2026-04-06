@@ -4,6 +4,15 @@ n_drones = 2 #fixed
 drone_capacity = 1 #fixed
 depot_index=0 #fixed
 
+def copy_solution(solution: dict):
+    solution_copy = solution.copy()
+    solution_copy["part1"] = solution["part1"][:]
+    solution_copy["part2"] = solution["part2"][:]
+    solution_copy["part3"] = solution["part3"][:]
+    solution_copy["part4"] = solution["part4"][:]
+
+    return solution_copy
+
 def parse_solution(values: str):
     """
     values: string like "1,2,3,|,10,20,|,5,6,|,100,200"

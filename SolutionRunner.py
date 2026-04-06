@@ -11,10 +11,12 @@ class SolutionRunner(CalCulateTotalArrivalTime, SolutionFeasibility):
         truck_times,
         drone_times,
         flight_range_limit: float,
+        n_nodes: int,
         depot_index: int = 0,
         max_iterations: int = 10,
         convergence_threshold: float = 1.0,
         n_drones: int = 2,
+        
     ):
         """
         Wraps feasibility check + total cost calculation in one object.
@@ -27,12 +29,14 @@ class SolutionRunner(CalCulateTotalArrivalTime, SolutionFeasibility):
         self.max_iterations = max_iterations
         self.convergence_threshold = convergence_threshold
         self.n_drones = n_drones
+        self.n_nodes=n_nodes
 
         n_nodes = truck_times.shape[0]
 
         # Create feasibility checker based on the instance
         self.feasibility = SolutionFeasibility(
-            n_nodes=n_nodes,
+            #n_nodes=n_nodes,
+            n_nodes=truck_times.shape[0],
             n_drones=n_drones,
             depot_index=depot_index,
             drone_times=drone_times,

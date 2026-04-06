@@ -1,13 +1,11 @@
 import copy
 from OneReinsert import one_reinsert
+from Common import copy_solution
+def local_search(runner, iterations):
 
-def local_search(initial_runner, iterations):
-    candidate_runner = copy.deepcopy(initial_runner)
-    best_runner = copy.deepcopy(initial_runner)
-
-    result = initial_runner.run()
+    result = runner.run()
     if result["feasible"]:
-        best_solution = initial_runner.solution
+        best_solution = copy_solution(runner.solution)
         best_objective = result["objective"]
         early_stop_counter = 0
     else:
@@ -21,32 +19,26 @@ def local_search(initial_runner, iterations):
             print("Early stop counter")
             print(early_stop_counter)
         early_stop_counter += 1
-        if early_stop_counter > 500:
+        if early_stop_counter > 10000:
             print("early_stop")
-            best_runner.solution = best_solution
-            return best_runner
+            return best_solution
         
+        candidate_solution = copy_solution(best_solution)
 
-                
+        candidate_solution, candidate_objective = one_reinsert(runner, candidate_solution)
+        if not candidate_solution:
+            print("No new insertions were found, continuing to next iteration.")
+            continue
 
-        candidate_runner.solution = copy.deepcopy(best_solution)
+        
+        if (candidate_objective < best_objective) and (runner.is_solution_feasible(candidate_solution)):
+            best_solution = copy_solution(candidate_solution)
+            best_objective = candidate_objective
+            early_stop_counter = 0
 
-        candidate_solution = one_reinsert(candidate_runner)
-        candidate_runner.solution = candidate_solution
-        total, arr, dep, feas = candidate_runner.calculate_total_waiting_time(candidate_solution)
+            print()
+            print("NEW BEST:")
+            print(best_solution)
+            print(best_objective)
 
-        if total < best_objective:
-            candidate_result = candidate_runner.run()
-            if candidate_result["feasible"] and candidate_result["objective"] < best_objective:
-                best_solution = copy.deepcopy(candidate_solution)
-                best_objective = copy.deepcopy(candidate_result["objective"])
-                early_stop_counter = 0
-
-                print()
-                print("NEW BEST:")
-                print(best_solution)
-                print(best_objective)
-
-    best_runner.solution = best_solution
-
-    return best_runner
+    return best_solution
