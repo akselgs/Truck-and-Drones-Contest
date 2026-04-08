@@ -3,8 +3,9 @@ from OneReinsert import one_reinsert
 import random
 import math
 from Common import copy_solution
+from TruckSectionReinsert import truck_section_reinsert
 
-def sim_ann(runner, iterations):
+def sim_ann_multiple_ops(runner, iterations):
     split = iterations // 100
     rand = random.randint(0,100)
     rand = rand/100
@@ -32,10 +33,11 @@ def sim_ann(runner, iterations):
             print("Random:", rand)
 
         rand_op = random.randint(0,2)
+        rand_op = 1
         if rand_op == 0:
             candidate_solution, candidate_objective = one_reinsert(runner, incumbent_solution)
         elif rand_op == 1:
-            print("op 2")
+            candidate_solution, candidate_objective = truck_section_reinsert(runner, incumbent_solution)
         else:
             print("op 3")
 
@@ -85,10 +87,11 @@ def sim_ann(runner, iterations):
         #print("incumb")
         #print(incumbent_runner.solution)
         rand_op = random.randint(0,2)
+        rand_op = 1
         if rand_op == 0:
             candidate_solution, candidate_objective = one_reinsert(runner, incumbent_solution)
         elif rand_op == 1:
-            print("op 2")
+            candidate_solution, candidate_objective = truck_section_reinsert(runner, incumbent_solution)
         else:
             print("op3")
         if not candidate_solution:

@@ -8,6 +8,7 @@ from InitialSolution import create_initial_runner, create_new_runner
 from LocalSearch import local_search
 from SimAnn import sim_ann
 import time
+from SimAnnMultipleOps import sim_ann_multiple_ops
 
 
 # ---------------------------------------------------------------------------
@@ -52,8 +53,8 @@ print(initial_result["feasible"])
 
 start = time.time()
 #new_solution = local_search(runner, 10000)
-new_solution = sim_ann(runner, 10000)
-
+#new_solution = sim_ann(runner, 10000)
+new_solution = sim_ann_multiple_ops(runner, 1)
 end = time.time()
 print("Time taken:")
 print()
