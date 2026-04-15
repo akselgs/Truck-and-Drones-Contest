@@ -37,6 +37,7 @@ filename = "Data/R_10.txt"
 # --
 runner = create_initial_runner(filename)
 
+
 initial_result = runner.run()
 
 
@@ -54,7 +55,7 @@ print(initial_result["feasible"])
 start = time.time()
 #new_solution = local_search(runner, 10000)
 #new_solution = sim_ann(runner, 10000)
-new_solution = sim_ann_multiple_ops(runner, 1)
+new_solution = sim_ann_multiple_ops(runner, 1000)
 end = time.time()
 print("Time taken:")
 print()
