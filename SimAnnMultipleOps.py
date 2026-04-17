@@ -4,6 +4,7 @@ import random
 import math
 from Common import copy_solution
 from TruckSectionReinsert import truck_section_reinsert
+from FlattenSection import flatten_section
 
 def sim_ann_multiple_ops(runner, iterations):
     split = iterations // 100
@@ -11,6 +12,8 @@ def sim_ann_multiple_ops(runner, iterations):
     rand = rand/100
     delta_w = []
     t_f = 0.1
+    op_1_threshold = 60
+    op_2_threshold = 90
 
     result = runner.run()
     if result["feasible"]:
@@ -30,19 +33,19 @@ def sim_ann_multiple_ops(runner, iterations):
         if (w % 100 == 0):
             print()
             print("Iteration", w)
-            print("Random:", rand)
 
-        rand_op = random.randint(0,2)
-        rand_op = 1
-        if rand_op == 0:
+        rand_op = random.randint(0,100)
+        #rand_op = 1
+        if rand_op < op_1_threshold:
             candidate_solution, candidate_objective = one_reinsert(runner, incumbent_solution)
-        elif rand_op == 1:
+        elif rand_op < op_2_threshold:
             candidate_solution, candidate_objective = truck_section_reinsert(runner, incumbent_solution)
         else:
-            print("op 3")
+            candidate_solution, candidate_objective = flatten_section(runner, incumbent_solution)
 
         if not candidate_solution:
-            print("No insertion positions found, continuing to next iteration from calibration-split.")
+            if w % 100 == 0: 
+                print("No insertion positions found, continuing to next iteration from calibration-split.")
             continue
         candidate_feasible = runner.is_solution_feasible(candidate_solution)
 
@@ -77,25 +80,26 @@ def sim_ann_multiple_ops(runner, iterations):
         
 
         early_stop_counter += 1
-        if early_stop_counter > 5000:
+        if early_stop_counter > 10000:
             return best_solution
-        if (i % 100 == 0):
+        if (i % 500 == 0):
             print()
             print("Iteration", i + split)
             print("Early stop counter:", early_stop_counter)
             print("Random:", rand)
         #print("incumb")
         #print(incumbent_runner.solution)
-        rand_op = random.randint(0,2)
-        rand_op = 1
-        if rand_op == 0:
+        rand_op = random.randint(0,100)
+        #rand_op = 1
+        if rand_op < op_1_threshold:
             candidate_solution, candidate_objective = one_reinsert(runner, incumbent_solution)
-        elif rand_op == 1:
+        elif rand_op < op_2_threshold:
             candidate_solution, candidate_objective = truck_section_reinsert(runner, incumbent_solution)
         else:
-            print("op3")
+            candidate_solution, candidate_objective = flatten_section(runner, incumbent_solution)
         if not candidate_solution:
-            print("No insertion positions found, continuing to next iteration.")
+            if i % 100 == 0: 
+                print("No insertion positions found, continuing to next iteration from calibration-split.")
             continue
         candidate_feasible = runner.is_solution_feasible(candidate_solution)
         #print("cand")
@@ -119,7 +123,7 @@ def sim_ann_multiple_ops(runner, iterations):
                 best_solution = copy_solution(incumbent_solution)
                 best_objective = incumbent_objective
                 print()
-                print("New best solution found")
+                print("New best solution found, operation:", rand_op)
                 print()
                 print(best_solution)
                 print(best_objective)
@@ -131,7 +135,8 @@ def sim_ann_multiple_ops(runner, iterations):
                 incumbent_objective = candidate_objective
                 #print()
                 #print("=======================")
-                print("Worse solution explored")
+                if i % 100 == 0:
+                    print("Worse solution explored, operation:", rand_op)
                 #print(incumbent_solution)
                 #print(incumbent_objective)
                 #print("Delta E", delta_e)

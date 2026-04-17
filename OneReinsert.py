@@ -213,6 +213,7 @@ def best_single_insert_random_select(runner, candidate, node):
         test_candidate["part3"] = [x+1 if (x >= i and x != -1) else x for x in candidate["part3"]]
         test_candidate["part4"] = [x+1 if (x >= i and x != -1) else x for x in candidate["part4"]]
 
+
         total, arr, dep, feas = runner.calculate_total_waiting_time(test_candidate)
 
         if feas and total < best_cost:
@@ -300,12 +301,12 @@ def one_reinsert(runner, solution=None):
     
     candidate, unassigned = destroy_random_node_delete(runner, solution) #Good
     for node in unassigned:
-                #candidate = single_insert(runner, candidate, node)
-                candidate_tuples = best_single_insert_random_select(runner, candidate, node)
-                if len(candidate_tuples) == 0:
-                    return None, None
-                else:
-                    candidate, objective = random_select_candidate(candidate_tuples)
-                    #candidate = weighted_select_candidate(candidates)
+        #candidate = single_insert(runner, candidate, node)
+        candidate_tuples = best_single_insert_random_select(runner, candidate, node)
+        if len(candidate_tuples) == 0:
+            return None, None
+        else:
+            candidate, objective = random_select_candidate(candidate_tuples)
+            #candidate = weighted_select_candidate(candidates)
 
     return candidate, objective
