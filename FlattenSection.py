@@ -41,8 +41,8 @@ def flatten_section(runner, solution):
 
         candidate["part1"].insert(insert_pos, node)
         candidate["part2"].pop(index_pos)
-        candidate["part3"] = [x+1 if (x >= insert_pos and x != -1) else x for x in candidate["part3"]]
-        candidate["part4"] = [x+1 if (x >= insert_pos and x != -1) else x for x in candidate["part3"]]
+        candidate["part3"] = [x+1 if (x > insert_pos and x != -1) else x for x in candidate["part3"]]
+        candidate["part4"] = [x+1 if (x > insert_pos and x != -1) else x for x in candidate["part3"]]
         candidate["part3"].pop(index_pos)
         candidate["part4"].pop(index_pos)
     try:
@@ -53,11 +53,11 @@ def flatten_section(runner, solution):
     if feas:
         return candidate, cost
     else:
-        print("flatten made infeasible..")
-        print("Before")
-        print(solution)
-        print("After")
-        print(candidate)
+        # print("flatten made infeasible..")
+        # print("Before")
+        # print(solution)
+        # print("After")
+        # print(candidate)
         cost, arr, dep, feas = runner.calculate_total_waiting_time(solution)
         return solution, cost 
 
