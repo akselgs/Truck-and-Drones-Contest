@@ -9,6 +9,9 @@ from LocalSearch import local_search
 from SimAnn import sim_ann
 import time
 from SimAnnMultipleOps import sim_ann_multiple_ops
+from pyinstrument import Profiler
+
+
 
 
 # ---------------------------------------------------------------------------
@@ -19,6 +22,10 @@ from SimAnnMultipleOps import sim_ann_multiple_ops
 
 
 ### ---START--- ###
+profile = False
+if profile:
+    profiler = Profiler()
+    profiler.start()
 # --
 # --
 # --Fixed Parameters--
@@ -29,7 +36,7 @@ depot_index=0 #fixed
 
 # --File selection--
 # --
-filename = "Data/F_100.txt"
+filename = "Data/R_50.txt"
 
 # ----------------------
 
@@ -52,10 +59,22 @@ print(initial_result["feasible"])
 # --Transformation--
 # --
 
-start = time.time()
+start = time.time() 
 #new_solution = local_search(runner, 10000)
 #new_solution = sim_ann(runner, 10000)
 new_solution = sim_ann_multiple_ops(runner, 10000)
+
+
+
+
+# -- Results --
+# --
+if profile:
+    profiler.stop()
+    profiler.print()
+    
+    profiler.open_in_browser()
+
 end = time.time()
 print("Time taken:")
 print()

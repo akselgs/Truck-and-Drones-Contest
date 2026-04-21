@@ -20,21 +20,6 @@ def flatten_section(runner, solution):
 
     candidate = copy_solution(solution)
 
-    # for i in reversed(range(0,len(solution["part2"]))):
-    #     if solution["part2"][i] == -1:
-    #         continue
-    #     if solution["part2"][i] not in drones_to_flatten:
-    #         continue
-    #     else:
-    #         #print("inserts at", solution["part3"][i], " : ", solution["part2"][i])
-    #         candidate["part1"].insert(solution["part3"][i], solution["part2"][i])
-    #         candidate["part2"].pop(i)
-            
-    #         candidate["part3"].pop(i)
-    #         candidate["part3"] = [x+1 if (x >= i and x != -1) else x for x in candidate["part3"]]
-    #         candidate["part4"].pop(i)
-    #         candidate["part4"] = [x+1 if (x >= i and x != -1) else x for x in candidate["part3"]]
-
     for node in drones_to_flatten:
         index_pos = candidate["part2"].index(node)
         insert_pos = candidate["part3"][index_pos]
@@ -53,11 +38,7 @@ def flatten_section(runner, solution):
     if feas:
         return candidate, cost
     else:
-        # print("flatten made infeasible..")
-        # print("Before")
-        # print(solution)
-        # print("After")
-        # print(candidate)
+
         cost, arr, dep, feas = runner.calculate_total_waiting_time(solution)
         return solution, cost 
 

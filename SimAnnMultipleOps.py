@@ -14,7 +14,7 @@ def sim_ann_multiple_ops(runner, iterations):
 
     ###Weights of operator. Should match nr of operators
     # scores = [1.0, 1.0, 1.0] #Scores if we want adjustable adaptive weights
-    weights = [1.0, 1.0, 1.0]
+    weights = [3.0, 1.0, 2.0]
 
     ###Rewards for updating scores
     # new_best_reward = 3

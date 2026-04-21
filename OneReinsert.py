@@ -204,7 +204,7 @@ def best_single_insert_random_select(runner, candidate, node):
     #print("Candidate before insert")
     #print(candidate)
     insert_positions = find_insert_positions(candidate)
-    
+
     #First we check truck insertions:
     for i in insert_positions["truck"]:
         test_candidate = copy_solution(candidate)
@@ -212,8 +212,7 @@ def best_single_insert_random_select(runner, candidate, node):
         test_candidate["part1"].insert(i,node)
         test_candidate["part3"] = [x+1 if (x >= i and x != -1) else x for x in candidate["part3"]]
         test_candidate["part4"] = [x+1 if (x >= i and x != -1) else x for x in candidate["part4"]]
-
-
+        
         total, arr, dep, feas = runner.calculate_total_waiting_time(test_candidate)
 
         if feas and total < best_cost:
@@ -264,8 +263,8 @@ def best_single_insert_random_select(runner, candidate, node):
                     if receiver_node_index > sender_node_index:
                         test_candidate = copy_solution(candidate)
                         test_candidate = insert_to_drone(test_candidate, node, sender_node_index, receiver_node_index, drone_index, divider_index)
-                    
                         total, arr, dep, feas = runner.calculate_total_waiting_time(test_candidate)
+                        
                         if feas:
                             if len(best_candidate_tuples) < 5:
                                 selected_candidate = copy_solution(test_candidate)
@@ -287,7 +286,6 @@ def best_single_insert_random_select(runner, candidate, node):
                 if found:
                     break
     
-
     return best_candidate_tuples
 
 def random_select_candidate(candidates):

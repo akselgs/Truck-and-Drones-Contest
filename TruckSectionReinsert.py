@@ -28,11 +28,7 @@ def truck_section_reinsert(runner, solution):
 
 def delete_truck_section(runner, solution, section_length):
     candidate = copy_solution(solution)
-    # candidate["part1"] = [0,2,4,5,6,8,0]
-    # candidate["part2"] = [3,7,-1,1]
-    # candidate["part3"] = [1,4,-1,2]
-    # candidate["part4"] = [3,7,-1,3]
-    # section_length = 3
+
 
     if len(candidate["part1"]) in candidate["part4"]:
         pos = candidate["part4"].index(len(candidate["part1"]))
@@ -134,8 +130,8 @@ def best_section_insert(remove_section, leftover_section, interior_nodes, exteri
             }
 
             # Very costly if we check orphans for all insert positions. Instead we select ideal insert position first, then add orphans later.
-
             obj, arr, dep, feas = runner.calculate_total_waiting_time(candidate)
+            # We could improve performance here by only checking boundaries instead of the whole length.. but this is easier
 
             if (obj < best_cost) and feas:
                 best_candidate = copy_solution(candidate)
@@ -144,31 +140,8 @@ def best_section_insert(remove_section, leftover_section, interior_nodes, exteri
     if best_candidate:    
         if len(orphans) > 0:
             for node in orphans:
-                try:
-                    candidate_tuples = best_single_insert_random_select(runner, best_candidate, node)
-                except:
-                    print("exterior_nodes")
-                    print(exterior_nodes)
-                    print("interior nodes")
-                    print(interior_nodes)
-                    print("Truck candidate")
-                    print(truck_candidate)
-                    print("orientation")
-                    print(o)
-                    print("Oprhans")
-                    print(orphans)
-                    print("Shift")
-                    print(shift)
-                    print("remove section")
-                    print(remove_section)
-                    print("leftovers")
-                    print(leftover_section)
-                    print("Old candidate")
-                    print(solution)
-                    print("Candidate")
-                    print(candidate)
-                    print(node)
-
+                candidate_tuples = best_single_insert_random_select(runner, best_candidate, node)
+                
                 if len(candidate_tuples) == 0:
                     return None, None
                 else:
