@@ -12,7 +12,6 @@ def flatten_section(runner, solution):
     drone_customers.remove(-1)
     if len(drone_customers) == 0:
         cost, arr, dep, feas = runner.calculate_total_waiting_time(solution)
-        print("No drones to flatten")
         return solution, cost
     
     drones_to_flatten = random.sample(drone_customers , nr_drones_flatten)

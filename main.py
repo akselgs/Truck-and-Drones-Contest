@@ -9,6 +9,7 @@ from LocalSearch import local_search
 from SimAnn import sim_ann
 import time
 from SimAnnMultipleOps import sim_ann_multiple_ops
+from AdaptiveSa import adaptive_sa
 from pyinstrument import Profiler
 
 
@@ -57,8 +58,8 @@ print(initial_result["feasible"])
 start = time.time() 
 #new_solution = local_search(runner, 10000)
 #new_solution = sim_ann(runner, 10000)
-new_solution = sim_ann_multiple_ops(runner, 10000)
-
+#new_solution = sim_ann_multiple_ops(runner, 10000)
+new_solution = adaptive_sa(runner, 10000)
 
 
 
