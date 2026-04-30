@@ -18,7 +18,7 @@ from pyinstrument import Profiler
 # ---------------------------------------------------------------------------
 
 ### ---START--- ###
-profile = False
+profile = True
 if profile:
     profiler = Profiler()
     profiler.start()
@@ -32,7 +32,7 @@ depot_index=0 #fixed
 
 # --File selection--
 # --
-filename = "Data/F_100.txt"
+filename = "Data/F_20.txt"
 
 # ----------------------
 
@@ -44,12 +44,7 @@ runner = create_initial_runner(filename)
 initial_result = runner.run()
 
 
-print("Initial runner solution")
-print(runner.solution)
-print("Initial runner objective:")
-print(initial_result["objective"])
-print("Feasibility:")
-print(initial_result["feasible"])
+
 # ----------------------
 
 # --Transformation--
@@ -59,7 +54,7 @@ start = time.time()
 #new_solution = local_search(runner, 10000)
 #new_solution = sim_ann(runner, 10000)
 #new_solution = sim_ann_multiple_ops(runner, 10000)
-new_solution = adaptive_sa(runner, 10000)
+new_solution = adaptive_sa(runner, 10000, filename)
 
 
 
@@ -70,6 +65,8 @@ if profile:
     profiler.print()
     
     profiler.open_in_browser()
+
+
 
 end = time.time()
 print("Time taken:")

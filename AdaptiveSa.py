@@ -1,36 +1,54 @@
-import copy
 from OneReinsert import one_reinsert
 import random
 import math
-from Common import copy_solution
+from Common import copy_solution, load_best, save_to_file
 from TruckSectionReinsert import truck_section_reinsert
 from FlattenSection import flatten_section
 
-def adaptive_sa(runner, iterations):
+
+#For this adaptive SA, I have had the problem that it is hard to evaluate the "performance" of operators that are meant to explore.
+#Rewarding based on SA accept, improvements and new best, heavily favours exploitative operators.
+#
+#Instead I will focus on just evaluating an operators ability to improve - namely it's average delta_e.
+#I will also keep track of the "gradient" of the search: i.e. how much the solution is improving the last x iterations.
+#When gradient is high, I want to assign higher weight to exploiting operators. 
+# As we reach local optima, gradient goes to zero: in which case I want to tend towards uniform weight of operators.
+# SUMMARY:
+# Instead of quantifying exploration, I default to exploration unless we find exploitation to be fruitful.
+
+def adaptive_sa(runner, iterations, filename):
+    # Save and/or Load from file:
+    all_time_best_solution = load_best(filename)
+    if all_time_best_solution:
+        all_time_best_objective, _,_,_ = runner.calculate_total_waiting_time(all_time_best_solution)
+    else:
+        all_time_best_objective = float('inf')
+    this_run_best_objective = float('inf')
+
+
     # Calibration split:
-    split = iterations // 100
+    schedule_split = iterations // 100
+
+    # How often prints for progress are displayed
+    progress_split = 500
+
+    #How often we save our solution
+    save_split = 1000
+    
+
     delta_w = []
     t_f = 0.1
 
     ###Weights of operator. Should match nr of operators
     weights = [1.0, 1.0, 1.0]
-    k = iterations//100
-    print("Weights are updated every", k , "iterations")
-
-    # Long term scores (updated every k iterations)
-    scores = [1.0, 1.0, 1.0] 
-
-    # Short term rewards and how often the operator was chosen (updated every iteration)
-    rewards = [0, 0, 0]
+    min_p = 0.1
+    weight_split = 10 * len(weights)
     counts = [0, 0 ,0]
+    gradient = 0
+    avg_delta_e = [0,0,0]
+    decay = 0.1
 
-    ###Rewards for updating scores
-    new_best_reward = 3
-    improvement_reward = 2
-    sa_accept_reward = 1
-    decay = 0.5
 
-    redundant_operators = 0
     #--Start
     result = runner.run()
 
@@ -42,10 +60,32 @@ def adaptive_sa(runner, iterations):
         incumbent_objective = result["objective"]
     else:
         print("ERROR- Initial result is not feasible")
+    
 
 
-    #-- Calibrate temperature
-    for w in range(split):
+    ## ---- START -----
+    #
+    #
+    print("=== Adaptive Simulated Annealing ===")
+    print()
+    print()
+    print("Iterations: ", iterations, "| Cooling schedule split: ", schedule_split)
+    print()
+    print("Progress will be printed every", progress_split, "iterations")
+    print("Weights will be updated every", weight_split, "iterations")
+    print("Progress will be saved every", save_split, "iterations")
+    print()
+    print("Best objective: ", all_time_best_objective)
+    print("Initial objective: ", best_objective)
+    print("-----------------------------------------")
+    
+
+
+
+    #-- Calibrate cooling schedule
+    print()
+    print("Cooling schedule:")
+    for w in range(schedule_split):
 
         #Random number to pass SA-threshold
         rand = random.randint(0,100)
@@ -91,24 +131,28 @@ def adaptive_sa(runner, iterations):
         print("Error, delta_W is empty, likely indicating too small sample size.")
     delta_avg = sum(delta_w)/len(delta_w)
     t_0 = (-1 * delta_avg)/(math.log(0.8))
-    alpha = (t_f / t_0) ** (1/(iterations - split))
+    alpha = (t_f / t_0) ** (1/(iterations - schedule_split))
     t = t_0
     print()
     print("Improvements during tuning: ", delta_w)
     print("Average improvement:", delta_avg)
-    print(iterations, split)
+    print(iterations, schedule_split)
     print("Alpha:", alpha)
     print("Initial temperature and final temperature:", t_0, t_f)
+    print("------------------------------")
     
     # Main iteration loop:
-    for i in range(split, iterations):
+    print()
+    print("Main loop")
+    for i in range(schedule_split, iterations):
         rand = random.randint(0,100)
         rand = rand/100
 
         #Progress
-        if ((i) % 100 == 0):
+        if ((i) % progress_split == 0):
             print()
             print("Iteration:", i , "| Best objective:", best_objective, "| Weights:", weights)
+
 
 
         #Operation choice
@@ -129,6 +173,8 @@ def adaptive_sa(runner, iterations):
         #Double check feasibility
         candidate_feasible = runner.is_solution_feasible(candidate_solution)
         delta_e = candidate_objective - incumbent_objective
+
+        
 
         #We always accept negative delte_e so we set p to 1 in these cases (saves computation and prevents p from exploding) 
         if delta_e < 0:
@@ -153,29 +199,40 @@ def adaptive_sa(runner, iterations):
                 rewards[op] += (sa_accept_reward * (t/t_0))
         t = alpha * t
 
-        # Update weights every k iterations
-        if i % k == 0:
+        # Update weights every weight_split iterations
+        if i % weight_split == 0:
             scores_sum = 0
-            print("Rewards and Counts this split:", rewards, " | " , counts)
-            for c in range(3):
-                if counts[c] > 0:
-                    avg_reward = rewards[c]/counts[c]
-                    scores[c] = (1-decay) * scores[c] + decay * avg_reward
-                    scores[c] = max(scores[c],1)
-                    scores_sum += scores[c]
+
+            # Update scores (long term)
+            for op in range(len(weights)):
+                avg_reward = (rewards[op] / counts[op]) if counts[op] > 0 else 0
+                scores[op] = ((1-decay) * scores[op]) + (decay * avg_reward)
+                scores_sum += scores[op]
+
+            # Update weights based on scores
+            for op in range(len(weights)):
+                if scores_sum > 0:
+                    weights[op] = (1 - len(weights) * min_p) * (scores[op] / scores_sum) + min_p
                 else:
-                    scores[c] = (1-decay) * scores[c]
-                    scores[c] = max(scores[c],1)
-                    scores_sum += scores[c]
-                    
-            scores_sum /= len(scores)
+                    weights[op] = 1 / len(weights)
+
+            #Reset rewards and counts
             rewards = [0,0,0]
             counts = [0,0,0]
+        
 
-            eps = 1e-8
-            # w_i = exp(S_i / τ) / Σ exp(S_j / τ)
-            weights = [(s + eps) / (scores_sum + eps * len(scores)) for s in scores]
-            print("Scores and Weights next split:", scores, " | " , weights)
+        #Update avg delta e for the used operator.
+        avg_delta_e[op] = ((1-decay) * avg_delta_e[op]) + (decay * delta_e)
 
+        #Update weights based on theire avg_delta_e and the gradient.
+        weights = update_weights()
 
+        
+        if i % save_split == 0:
+            save_to_file(filename, best_solution, best_objective, this_run_best_objective, all_time_best_objective)
+
+    save_to_file(filename, best_solution, best_objective, this_run_best_objective, all_time_best_objective)
     return best_solution
+
+def update_weights():
+    return "yo"

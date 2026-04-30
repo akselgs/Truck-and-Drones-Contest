@@ -1,4 +1,5 @@
 import numpy as np
+import json
 
 n_drones = 2 #fixed
 drone_capacity = 1 #fixed
@@ -69,3 +70,38 @@ def read_data(filename: str):
     drone_times=np.array(drone_times)
 
     return n_nodes, n_customers, n_drones, flight_range, truck_times, drone_times, flight_range,  drone_capacity
+
+def save_to_file(filename: str, solution, objective, this_run_best_objective, all_time_best_objective):
+
+    #Best this run:
+    if objective < this_run_best_objective:
+        with open("solutions/" + filename[5:-4] + "_current.json", "w") as current:
+            json.dump({
+                "part1" : solution["part1"],
+                "part2" : solution["part2"],
+                "part3" : solution["part3"],
+                "part4" : solution["part4"],
+                }, current)
+        this_run_best_objective = objective
+
+    #New all time best
+    if objective < all_time_best_objective:
+        print("NEW ALL TIME BEST!")
+        with open("solutions/" + filename[5:-4] + "_best.json", "w") as best:
+            json.dump({
+                "part1" : solution["part1"],
+                "part2" : solution["part2"],
+                "part3" : solution["part3"],
+                "part4" : solution["part4"],
+                }, best)
+        all_time_best_objective = objective
+        print(all_time_best_objective)
+            
+def load_best(filename: str):
+    path = "solutions/" + filename[5:-4] + "_best.json"
+    try:
+        with open(path, "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return None  # no best yet
+    
