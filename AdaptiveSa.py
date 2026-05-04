@@ -35,6 +35,8 @@ def adaptive_sa(runner, iterations, filename):
     #How often we save our solution
     save_split = 1000
     
+    #"Staleness" before we promote more exploratory operators:
+    staleness_limit = iterations // 50
 
     delta_w = []
     t_f = 0.1
@@ -44,9 +46,14 @@ def adaptive_sa(runner, iterations, filename):
     min_p = 0.1
     weight_split = 10 * len(weights)
     counts = [0, 0 ,0]
-    gradient = 0
     avg_delta_e = [0,0,0]
     decay = 0.1
+
+    # We create a list of objectives, so we can keep track of how the gradient has improved the last X operators
+    basin_obj = []
+    obj_curr = 0
+    gradient = 0
+
 
 
     #--Start
@@ -129,6 +136,7 @@ def adaptive_sa(runner, iterations, filename):
     #Now, we can update initial temperatures and cooling based on the tuning.
     if len(delta_w) == 0:
         print("Error, delta_W is empty, likely indicating too small sample size.")
+
     delta_avg = sum(delta_w)/len(delta_w)
     t_0 = (-1 * delta_avg)/(math.log(0.8))
     alpha = (t_f / t_0) ** (1/(iterations - schedule_split))
@@ -144,6 +152,10 @@ def adaptive_sa(runner, iterations, filename):
     # Main iteration loop:
     print()
     print("Main loop")
+    obj_start = best_objective
+    reference_gradient = (incumbent_objective/best_objective) / 100
+    print("Reference Gradient:")
+    print(reference_gradient)
     for i in range(schedule_split, iterations):
         rand = random.randint(0,100)
         rand = rand/100
@@ -151,8 +163,18 @@ def adaptive_sa(runner, iterations, filename):
         #Progress
         if ((i) % progress_split == 0):
             print()
-            print("Iteration:", i , "| Best objective:", best_objective, "| Weights:", weights)
+            print("Iteration:", i , "| Best objective:", best_objective)
+            print("Weights")
+            print("Weights: Op 1-" ,float(weights[0]))
+            print("Weights: Op 2-" ,float(weights[1]))
+            print("Weights: Op 3-" ,float(weights[2]))
 
+            print("Gradient")
+            print(gradient)
+            print("Oldest in the last 100 iterations")
+            print(basin_obj[-1])
+            print("Currently explored objective")
+            print(incumbent_objective)
 
 
         #Operation choice
@@ -167,7 +189,6 @@ def adaptive_sa(runner, iterations, filename):
 
         #If no insertions are found using one-reinsert, it will return none.
         if not candidate_solution:
-            redundant_operators += 1
             continue
 
         #Double check feasibility
@@ -185,47 +206,70 @@ def adaptive_sa(runner, iterations, filename):
         if candidate_feasible and (delta_e < 0):
             incumbent_solution = copy_solution(candidate_solution)
             incumbent_objective = candidate_objective
-            rewards[op] += (improvement_reward * (1 - (t/t_0)))
+            #rewards[op] += (improvement_reward * (1 - (t/t_0)))
             
             if incumbent_objective < best_objective:
                 best_solution = copy_solution(incumbent_solution)
                 best_objective = incumbent_objective
-                rewards[op] += new_best_reward
-                
+                #rewards[op] += new_best_reward
+            
+            if len(basin_obj) < 100:
+                basin_obj.insert(0,incumbent_objective)
+            else:
+                basin_obj.pop()
+                basin_obj.insert(0,incumbent_objective)
+            gradient = basin_obj[-1] - incumbent_objective
+            
         elif candidate_feasible and (rand <  p):
             if delta_e != 0:
                 incumbent_solution = copy_solution(candidate_solution)
                 incumbent_objective = candidate_objective
-                rewards[op] += (sa_accept_reward * (t/t_0))
+                #rewards[op] += (sa_accept_reward * (t/t_0))
+
+                basin_obj = []
+                basin_obj.append(incumbent_objective + delta_e)
+                gradient = basin_obj[-1] - incumbent_objective
+
+        else:
+            if len(basin_obj) < 100:
+                basin_obj.insert(0,incumbent_objective)
+            else:
+                basin_obj.pop()
+                basin_obj.insert(0,incumbent_objective)
+            gradient = basin_obj[-1] - incumbent_objective
+
+
         t = alpha * t
 
+        
+
         # Update weights every weight_split iterations
-        if i % weight_split == 0:
-            scores_sum = 0
+        # if i % weight_split == 0:
+        #     scores_sum = 0
 
-            # Update scores (long term)
-            for op in range(len(weights)):
-                avg_reward = (rewards[op] / counts[op]) if counts[op] > 0 else 0
-                scores[op] = ((1-decay) * scores[op]) + (decay * avg_reward)
-                scores_sum += scores[op]
+        #     # Update scores (long term)
+        #     for op in range(len(weights)):
+        #         avg_reward = (rewards[op] / counts[op]) if counts[op] > 0 else 0
+        #         scores[op] = ((1-decay) * scores[op]) + (decay * avg_reward)
+        #         scores_sum += scores[op]
 
-            # Update weights based on scores
-            for op in range(len(weights)):
-                if scores_sum > 0:
-                    weights[op] = (1 - len(weights) * min_p) * (scores[op] / scores_sum) + min_p
-                else:
-                    weights[op] = 1 / len(weights)
+        #     # Update weights based on scores
+        #     for op in range(len(weights)):
+        #         if scores_sum > 0:
+        #             weights[op] = (1 - len(weights) * min_p) * (scores[op] / scores_sum) + min_p
+        #         else:
+        #             weights[op] = 1 / len(weights)
 
-            #Reset rewards and counts
-            rewards = [0,0,0]
-            counts = [0,0,0]
+        #     #Reset rewards and counts
+        #     rewards = [0,0,0]
+        #     counts = [0,0,0]
         
 
         #Update avg delta e for the used operator.
         avg_delta_e[op] = ((1-decay) * avg_delta_e[op]) + (decay * delta_e)
 
         #Update weights based on theire avg_delta_e and the gradient.
-        weights = update_weights()
+        weights = update_weights(avg_delta_e, gradient, reference_gradient, 3)
 
         
         if i % save_split == 0:
@@ -234,5 +278,17 @@ def adaptive_sa(runner, iterations, filename):
     save_to_file(filename, best_solution, best_objective, this_run_best_objective, all_time_best_objective)
     return best_solution
 
-def update_weights():
-    return "yo"
+def update_weights(avg_delta_e, gradient, reference_gradient, n_operators):
+    gradient_normalized = min(gradient / reference_gradient, 1.0)
+    
+    total = sum(avg_delta_e)
+    if total > 0:
+        exploit_weights = [d / total for d in avg_delta_e]
+    else:
+        exploit_weights = [1 / n_operators] * n_operators  # uniform fallback before data
+    
+    weights = [
+        gradient_normalized * ew + (1 - gradient_normalized) * (1 / n_operators)
+        for ew in exploit_weights
+    ]
+    return weights
