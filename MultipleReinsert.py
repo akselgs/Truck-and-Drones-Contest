@@ -71,7 +71,7 @@ def destroy_random_node_delete(runner, solution):
         candidate["part3"] = [x-1 if x >= index else x for x in candidate["part3"]]
         candidate["part4"] = [x-1 if x > index else x for x in candidate["part4"]]
 
-    else:
+    elif deletion in candidate["part2"]:
         index = solution["part2"].index(deletion)
         candidate["part2"].remove(deletion)
         unassigned.append(deletion)
@@ -197,7 +197,7 @@ def insert_to_drone(solution, node, sender, receiver, drone, divider_index):
 
     return solution
 
-def best_single_insert_random_select(runner, candidate, node):
+def two_best_single_insert(runner, candidate, node):
     best_cost = float('inf')
     best_candidate_tuples = []
     best_truck_insertion = None
@@ -266,7 +266,7 @@ def best_single_insert_random_select(runner, candidate, node):
                         total, arr, dep, feas = runner.calculate_total_waiting_time(test_candidate)
                         
                         if feas:
-                            if len(best_candidate_tuples) < 5:
+                            if len(best_candidate_tuples) < 2:
                                 selected_candidate = copy_solution(test_candidate)
 
                                 best_candidate_tuples.append((total, selected_candidate))
@@ -288,24 +288,73 @@ def best_single_insert_random_select(runner, candidate, node):
     
     return best_candidate_tuples
 
-def random_select_candidate(candidates):
-    rand_max = len(candidates)
-    selected = random.randint(0,rand_max-1)
-    return candidates[selected][1], candidates[selected][0]
+def x_destroy_regret_reinsert(runner, solution=None):
 
-def one_reinsert(runner, solution=None):
+    x = random.randint(1,3)
+    
     if not solution:
         solution = runner.solution
-    
-    candidate, unassigned = destroy_random_node_delete(runner, solution) #Good
-    for node in unassigned:
-        #candidate = single_insert(runner, candidate, node)
-        candidate_tuples = best_single_insert_random_select(runner, candidate, node)
-        if len(candidate_tuples) == 0:
-            total, _, _, _ = runner.calculate_total_waiting_time(solution)
-            return solution, total
-        else:
-            candidate, objective = random_select_candidate(candidate_tuples)
-            #candidate = weighted_select_candidate(candidates)
 
-    return candidate, objective
+    candidate = solution
+    unassigned_list = []
+    for i in range(x):
+        candidate , unassigned = destroy_random_node_delete(runner, candidate)
+        unassigned_list.extend(unassigned)
+    # print("candidate")
+    # print(candidate)
+    # print("unassigned")
+    # print(unassigned_list)
+
+    candidate = regret_insert(runner, candidate, unassigned_list)
+    
+    objective, _, _, feas = runner.calculate_total_waiting_time(candidate)
+    if feas:
+        return candidate, objective
+    else:
+        objective, _, _, feas = runner.calculate_total_waiting_time(solution)
+        return solution , objective
+
+def regret_insert(runner, candidate, unassigned_list):
+    candidates = []
+    diffs = []
+    for orphan in unassigned_list:
+        candidate_tuples = two_best_single_insert(runner, candidate, orphan)
+        if len(candidate_tuples) < 1:
+            #print("Returned early. No valid inserts found")
+            return candidate
+        elif len(candidate_tuples) < 2:
+            #print("Only one valid insertion: Automatically prioritized")
+            candidate = candidate_tuples[0][1]
+            unassigned_list.remove(orphan)
+            if len(unassigned_list) > 0:
+                candidate = regret_insert(runner, candidate, unassigned_list)
+            return candidate
+
+        else:
+            best_insert_score = candidate_tuples[0][0]
+            second_best_insert = candidate_tuples[1][0]
+            diff = second_best_insert - best_insert_score
+            diffs.append(diff)
+            candidates.append(candidate_tuples[0][1])
+
+    # print("candidates")
+    # print(candidates)
+    # print("regrets")
+    # print(diffs)
+    biggest_regret = diffs.index(max(diffs))
+    # print("biggest regret index")
+    # print(biggest_regret)
+    candidate = candidates[biggest_regret]
+    unassigned_list.pop(biggest_regret)
+    # print("corresponding candidate")
+    # print(candidate)
+    # print(unassigned_list)
+    
+    
+    
+
+    if len(unassigned_list) > 0:
+        candidate = regret_insert(runner, candidate, unassigned_list)
+    #print("returns successfully")
+    return candidate
+

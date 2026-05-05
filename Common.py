@@ -96,6 +96,12 @@ def save_to_file(filename: str, solution, objective, this_run_best_objective, al
                 }, best)
         all_time_best_objective = objective
         print(all_time_best_objective)
+
+
+    with open("solutions/" + filename[5:-4] + "_final.json", "w") as current_obj:
+        json.dump({
+            "objective" : objective
+        }, current_obj)
             
 def load_best(filename: str):
     path = "solutions/" + filename[5:-4] + "_best.json"
